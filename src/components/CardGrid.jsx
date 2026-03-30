@@ -1,32 +1,92 @@
-export default function CardGrid({ cards }) {
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-      {cards.map((c) => (
-        <article
-          key={c.id}
-          className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40"
-        >
-          <div className="aspect-[3/4] w-full bg-slate-800">
-            {/* imagen fake: luego vendrá del back */}
-            {c.image ? (
-              <img
-                src={c.image}
-                alt={c.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-4xl">
-                🃏
-              </div>
-            )}
-          </div>
+import { useFavorites } from "../context/FavoritesContext";
 
-          <div className="p-3">
-            <h3 className="line-clamp-1 font-semibold">{c.name}</h3>
-            <p className="text-xs text-slate-400">{c.collection}</p>
-          </div>
-        </article>
-      ))}
-    </div>
+// 🎨 CLASE POR TIPO (Pokemon)
+function getTypeClass(card) {
+  if (card.source !== "pokemon") return "";
+
+  const type = card.types?.[0]?.toLowerCase();
+
+  if (!type) return "";
+
+  return `type-${type}`;
+}
+
+// ⭐ CLASE POR RAREZA
+function getRarityClass(card) {
+  const r = card.rarity?.toLowerCase();
+
+  if (r?.includes("mythic")) return "rarity-mythic";
+  if (r?.includes("rare")) return "rarity-rare";
+  if (r?.includes("uncommon")) return "rarity-uncommon";
+
+  return "rarity-common";
+}
+
+export default function CardGrid({ cards = [], onSelectCard }) {
+  const { favorites, toggleFavorite } = useFavorites();
+
+  return (
+    <section className="cardsGrid">
+      {cards.map((card) => {
+        const isFavorite = favorites.some((f) => f.id === card.id);
+
+        return (
+          <article
+            key={card.id}
+            className={`cardItem ${getTypeClass(card)} ${getRarityClass(card)}`}
+          >
+            <div className="cardInner">
+
+              {/* ✨ BRILLO */}
+              <div className="cardShine"></div>
+
+              {/* FRONT */}
+              <div
+                className="cardFront"
+                onClick={() => onSelectCard && onSelectCard(card)}
+              >
+                <img src={card.imageUrl} alt={card.name} />
+
+                <div className="cardInfo">
+                  <h4>{card.name}</h4>
+
+                  <span className="badge">
+                    {card.source === "pokemon" ? "Pokémon" : "Magic"}
+                  </span>
+                </div>
+              </div>
+
+              {/* BACK */}
+              <div className="cardBack">
+                <div className="cardBackContent">
+                  <h4>{card.name}</h4>
+
+                  <p>
+                    <strong>Tipo:</strong>{" "}
+                    {card.type || card.types?.join(", ")}
+                  </p>
+
+                  <p>
+                    <strong>Rareza:</strong> {card.rarity}
+                  </p>
+
+                  <p className="cardText">
+                    {card.text || "Sin descripción"}
+                  </p>
+
+                  <button
+                    className="btn btnPrimary"
+                    onClick={() => toggleFavorite(card)}
+                  >
+                    {isFavorite ? "💔 Quitar" : "⭐ Favorito"}
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </article>
+        );
+      })}
+    </section>
   );
 }

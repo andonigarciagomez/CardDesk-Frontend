@@ -4,8 +4,13 @@ import { useAuth } from "../context/AuthContext";
 export default function ProtectedRoute({ children }) {
   const { token, loading } = useAuth();
 
-  if (loading) return <p className="text-slate-300">Cargando...</p>;
-  if (!token) return <Navigate to="/login" replace />;
+  if (loading) {
+    return <p>Cargando...</p>;
+  }
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
 
   return children;
 }

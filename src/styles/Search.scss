@@ -1,0 +1,31 @@
+.searchFilters{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.searchFilters__group{
+  display: flex;
+  flex-direction: column;
+}
+
+.searchFilters__group--full{
+  grid-column: 1 / -1;
+}
+
+.searchFilters__actions{
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.homeResults{
+  margin-top: 28px;
+}
+
+.homeResults__title{
+  margin-bottom: 18px;
+  font-size: 22px;
+}

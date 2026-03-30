@@ -1,0 +1,45 @@
+.heroBanner{
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  margin-bottom: 28px;
+  min-height: 320px;
+}
+
+.heroBanner__image{
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  object-fit: cover;
+  display: block;
+}
+
+.heroBanner__overlay{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 28px;
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.08) 0%,
+    rgba(0,0,0,0.28) 45%,
+    rgba(0,0,0,0.72) 100%
+  );
+}
+
+.heroBanner__title{
+  margin: 0 0 10px;
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 800;
+  color: #fff;
+}
+
+.heroBanner__text{
+  margin: 0;
+  max-width: 700px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.9);
+}

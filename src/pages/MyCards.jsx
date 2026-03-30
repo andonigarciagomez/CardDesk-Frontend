@@ -1,31 +1,103 @@
+import { useState } from "react";
+import { useFavorites } from "../context/FavoritesContext";
 import CardGrid from "../components/CardGrid";
 
-const demoCards = [
-  { id: 1, name: "Black Lotus", collection: "Magic", image: "" },
-  { id: 2, name: "Charizard", collection: "Pokémon", image: "" },
-  { id: 3, name: "Messi Rookie", collection: "Fútbol", image: "" },
-  { id: 4, name: "Mox Sapphire", collection: "Magic", image: "" },
-  { id: 5, name: "Pikachu", collection: "Pokémon", image: "" },
-  { id: 6, name: "Mbappé Limited", collection: "Fútbol", image: "" },
-];
-
 export default function MyCards() {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold">Mis cartas</h2>
-          <p className="text-sm text-slate-400">
-            Vista colección (grid). Luego añadimos filtros y buscador.
-          </p>
-        </div>
+  const { favorites, clearFavorites } = useFavorites();
+  const [selectedCard, setSelectedCard] = useState(null);
 
-        <button className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium hover:bg-emerald-500">
-          + Añadir
-        </button>
+  return (
+    <section className="myCardsPage">
+      <div className="card">
+        <div className="cardBody">
+          <h1 className="h1">Mi colección</h1>
+
+          <p className="p">
+            Aquí puedes ver todas las cartas que has guardado.
+          </p>
+
+          {favorites.length > 0 && (
+            <div className="myCardsActions">
+              <button className="btn btnDanger" onClick={clearFavorites}>
+                Vaciar colección
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <CardGrid cards={demoCards} />
-    </div>
+      <div className="homeResults">
+        <h2 className="homeResults__title">Cartas guardadas</h2>
+
+        {favorites.length > 0 ? (
+          <CardGrid
+            cards={favorites}
+            onSelectCard={setSelectedCard}
+            showRemove={true}
+          />
+        ) : (
+          <div className="card">
+            <div className="cardBody">
+              <p className="p">
+                Todavía no has guardado ninguna carta.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {selectedCard && (
+        <div
+          className="cardModalOverlay"
+          onClick={() => setSelectedCard(null)}
+        >
+          <div
+            className="cardModal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="cardModalClose btn btnDanger"
+              onClick={() => setSelectedCard(null)}
+            >
+              X
+            </button>
+
+            <div className="cardModalContent">
+              <div className="cardModalImage">
+                {selectedCard.imageUrl ? (
+                  <img src={selectedCard.imageUrl} alt={selectedCard.name} />
+                ) : (
+                  <div className="cardModalPlaceholder">🃏</div>
+                )}
+              </div>
+
+              <div className="cardModalInfo">
+                <h3>{selectedCard.name}</h3>
+
+                <p>
+                  <strong>Set:</strong> {selectedCard.setName || "N/A"}
+                </p>
+
+                <p>
+                  <strong>Rareza:</strong> {selectedCard.rarity || "N/A"}
+                </p>
+
+                <p>
+                  <strong>Tipo:</strong>{" "}
+                  {selectedCard.type ||
+                    selectedCard.types?.join(", ") ||
+                    "N/A"}
+                </p>
+
+                <p>
+                  <strong>Texto:</strong>{" "}
+                  {selectedCard.text || "Sin descripción"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

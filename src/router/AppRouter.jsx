@@ -10,9 +10,9 @@ import MyCards from "../pages/MyCards";
 
 export default function AppRouter() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="app-shell">
       <Navbar />
-      <main className="mx-auto w-full max-w-6xl px-4 py-6">
+      <main className="main">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -26,6 +26,7 @@ export default function AppRouter() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/my-cards"
             element={
