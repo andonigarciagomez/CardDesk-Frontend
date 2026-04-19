@@ -8,7 +8,16 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
 
+  const [darkMode, setDarkMode] = useState(false);
+
   useEffect(() => {
+    const savedMode = localStorage.getItem("darkMode");
+
+    if (savedMode === "true") {
+      document.body.classList.add("dark");
+      setDarkMode(true);
+    }
+
     const timer1 = setTimeout(() => {
       setFadeOut(true);
     }, 1500);
@@ -23,6 +32,15 @@ export default function App() {
     };
   }, []);
 
+  const toggleDarkMode = () => {
+    document.body.classList.toggle("dark");
+
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+
+    localStorage.setItem("darkMode", newMode);
+  };
+
   if (showSplash) {
     return <SplashScreen fadeOut={fadeOut} />;
   }
@@ -30,6 +48,21 @@ export default function App() {
   return (
     <AuthProvider>
       <FavoritesProvider>
+
+        {/* 🌙 BOTÓN MODO OSCURO */}
+        <button
+          onClick={toggleDarkMode}
+          style={{
+            position: "fixed",
+            top: "15px",
+            right: "15px",
+            zIndex: 1000,
+          }}
+          className="btn btnGhost"
+        >
+          {darkMode ? "☀️" : "🌙"}
+        </button>
+
         <AppRouter />
       </FavoritesProvider>
     </AuthProvider>

@@ -1,92 +1,141 @@
-import { useFavorites } from "../context/FavoritesContext";
+import { useEffect, useState } from "react";
+import clickSound from "../assets/click.mp3";
+import {
+  getFavorites,
+  addFavorite,
+  deleteFavorite,
+} from "../services/favoriteService";
 
-// 🎨 CLASE POR TIPO (Pokemon)
-function getTypeClass(card) {
-  if (card.source !== "pokemon") return "";
+const CardGrid = ({ cards = [], onSelectCard }) => {
+  const [favorites, setFavorites] = useState([]);
 
-  const type = card.types?.[0]?.toLowerCase();
+  useEffect(() => {
+    loadFavorites();
+  }, []);
 
-  if (!type) return "";
+  const loadFavorites = async () => {
+    try {
+      const data = await getFavorites();
+      setFavorites(data);
+    } catch (error) {
+      console.error("Error cargando favoritos", error);
+    }
+  };
 
-  return `type-${type}`;
-}
+  // 🔊 SONIDO
+  const playSound = () => {
+    const audio = new Audio(clickSound);
+    audio.volume = 0.3;
+    audio.play();
+  };
 
-// ⭐ CLASE POR RAREZA
-function getRarityClass(card) {
-  const r = card.rarity?.toLowerCase();
+  // ⭐ CHECK FAVORITO
+  const isFavorite = (cardId) => {
+    return favorites.some((fav) => fav.card_id === cardId);
+  };
 
-  if (r?.includes("mythic")) return "rarity-mythic";
-  if (r?.includes("rare")) return "rarity-rare";
-  if (r?.includes("uncommon")) return "rarity-uncommon";
+  // ⚡ FAVORITOS INSTANTÁNEOS
+  const handleToggleFavorite = async (card) => {
+    const alreadyFav = isFavorite(card.id);
 
-  return "rarity-common";
-}
+    setFavorites((prev) =>
+      alreadyFav
+        ? prev.filter((f) => f.card_id !== card.id)
+        : [...prev, { card_id: card.id }]
+    );
 
-export default function CardGrid({ cards = [], onSelectCard }) {
-  const { favorites, toggleFavorite } = useFavorites();
+    try {
+      if (alreadyFav) {
+        await deleteFavorite(card.id);
+      } else {
+        await addFavorite({
+          id: card.id,
+          name: card.name,
+          image: card.image,
+        });
+      }
+    } catch (error) {
+      console.error("Error toggle favorito", error);
+      loadFavorites(); // rollback
+    }
+  };
+
+  // 🔥 EFECTO 3D TILT
+  const handleMouseMove = (e, el) => {
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const rotateX = -(y / rect.height - 0.5) * 12;
+    const rotateY = (x / rect.width - 0.5) * 12;
+
+    el.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+  };
+
+  const resetTilt = (el) => {
+    if (!el) return;
+    el.style.transform = "rotateX(0) rotateY(0) scale(1)";
+  };
+
+  // 🎨 CLASE POR COLECCIÓN
+  const getCollectionClass = (card) => {
+    if (card.raw?.card_images) return "yugioh"; // Yu-Gi-Oh
+    if (card.raw?.types) return "pokemon"; // Pokémon
+    return "magic"; // Magic
+  };
 
   return (
-    <section className="cardsGrid">
+    <div className="card-grid">
       {cards.map((card) => {
-        const isFavorite = favorites.some((f) => f.id === card.id);
+        const isHolo =
+          card.raw?.rarity === "Rare" ||
+          card.raw?.rarity === "Mythic Rare";
+
+        const collectionClass = getCollectionClass(card);
 
         return (
-          <article
+          <div
             key={card.id}
-            className={`cardItem ${getTypeClass(card)} ${getRarityClass(card)}`}
+            className={`card ${isHolo ? "holo" : ""} ${collectionClass}`}
+            ref={(el) => (card._el = el)}
+            onMouseMove={(e) => handleMouseMove(e, card._el)}
+            onMouseLeave={() => resetTilt(card._el)}
+            onClick={() => {
+              playSound();
+              onSelectCard && onSelectCard(card);
+            }}
           >
-            <div className="cardInner">
+            {/* ⭐ FAVORITO */}
+            <button
+              className={`favorite-btn ${
+                isFavorite(card.id) ? "active" : ""
+              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleFavorite(card);
+              }}
+            >
+              {isFavorite(card.id) ? "❤️" : "🤍"}
+            </button>
 
-              {/* ✨ BRILLO */}
-              <div className="cardShine"></div>
+            {/* 🖼️ IMAGEN */}
+            <img
+              src={card.image}
+              alt={card.name}
+              loading="lazy"
+            />
 
-              {/* FRONT */}
-              <div
-                className="cardFront"
-                onClick={() => onSelectCard && onSelectCard(card)}
-              >
-                <img src={card.imageUrl} alt={card.name} />
-
-                <div className="cardInfo">
-                  <h4>{card.name}</h4>
-
-                  <span className="badge">
-                    {card.source === "pokemon" ? "Pokémon" : "Magic"}
-                  </span>
-                </div>
-              </div>
-
-              {/* BACK */}
-              <div className="cardBack">
-                <div className="cardBackContent">
-                  <h4>{card.name}</h4>
-
-                  <p>
-                    <strong>Tipo:</strong>{" "}
-                    {card.type || card.types?.join(", ")}
-                  </p>
-
-                  <p>
-                    <strong>Rareza:</strong> {card.rarity}
-                  </p>
-
-                  <p className="cardText">
-                    {card.text || "Sin descripción"}
-                  </p>
-
-                  <button
-                    className="btn btnPrimary"
-                    onClick={() => toggleFavorite(card)}
-                  >
-                    {isFavorite ? "💔 Quitar" : "⭐ Favorito"}
-                  </button>
-                </div>
-              </div>
-
+            {/* 📝 INFO */}
+            <div className="card-info">
+              <p>{card.name}</p>
             </div>
-          </article>
+          </div>
         );
       })}
-    </section>
+    </div>
   );
-}
+};
+
+export default CardGrid;

@@ -1,242 +1,399 @@
-/* ========================= */
-/* GRID */
-/* ========================= */
-
-.cardsGrid{
+/* 🔥 GRID GENERAL */
+.card-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+  padding: 20px;
 }
 
-/* ========================= */
-/* CARD BASE */
-/* ========================= */
-
-.cardItem{
-  width: 100%;
-  height: 320px;
-  perspective: 1000px;
-  transition: transform 0.2s ease;
-}
-
-.cardItem:hover{
-  transform: translateY(-10px) scale(1.03);
-}
-
-.cardInner{
+/* 🔥 CARD */
+.card {
   position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  transition: transform 0.6s;
-}
-
-/* FLIP */
-.cardItem:hover .cardInner{
-  transform: rotateY(180deg);
-}
-
-/* ========================= */
-/* FRONT / BACK */
-/* ========================= */
-
-.cardFront,
-.cardBack{
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
+  height: 300px;
   border-radius: 16px;
   overflow: hidden;
+  cursor: pointer;
+
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+
+  transition: all 0.3s ease;
 }
 
-.cardFront img{
+/* 🔥 HOVER PRO */
+.card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* 🔥 EFECTO BRILLO */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transition: 0.6s;
+  z-index: 2;
+}
+
+.card:hover::before {
+  left: 120%;
+}
+
+/* 🔥 IMAGEN */
+.card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.cardBack{
-  transform: rotateY(180deg);
-  background: #0b0f1f;
-}
-
-/* ========================= */
-/* INFO FRONT */
-/* ========================= */
-
-.cardInfo{
+/* 🔥 INFO (overlay) */
+.card-info {
   position: absolute;
   bottom: 0;
   width: 100%;
-  padding: 8px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.8));
-  color: white;
-}
+  padding: 12px;
 
-.cardInfo h4{
-  margin: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+
+  color: white;
   font-size: 14px;
+  font-weight: 500;
+  z-index: 3;
 }
 
-/* ========================= */
-/* BACK CONTENT */
-/* ========================= */
+/* 🔥 BOTÓN FAVORITO */
+.favorite-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 
-.cardBackContent{
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 10px;
-  gap: 6px;
-  font-size: 11px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  padding: 8px;
+
+  cursor: pointer;
+  z-index: 5;
+  font-size: 18px;
+
+  transition: all 0.2s ease;
+}
+
+.favorite-btn:hover {
+  transform: scale(1.2);
+}
+
+.favorite-btn.active {
+  background: #ff4757;
   color: white;
 }
 
-.cardBackContent h4{
-  margin: 0;
-  font-size: 13px;
+/* 🔥 SKELETON LOADING */
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+  padding: 20px;
 }
 
-.cardText{
-  opacity: .8;
-  font-size: 10px;
-  line-height: 1.3;
-  overflow-y: auto;
-  max-height: 70px;
-}
+.skeleton-card {
+  height: 300px;
+  border-radius: 16px;
 
-.cardBackContent button{
-  margin-top: auto;
-}
-
-/* ========================= */
-/* BRILLO */
-/* ========================= */
-
-.cardShine{
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
   background: linear-gradient(
-    120deg,
-    transparent 30%,
-    rgba(255,255,255,0.2),
-    transparent 70%
+    90deg,
+    #1e293b,
+    #334155,
+    #1e293b
   );
-  opacity: 0;
-  transition: opacity 0.3s;
+
+  background-size: 200%;
+  animation: shimmer 1.5s infinite;
 }
 
-.cardItem:hover .cardShine{
-  opacity: 1;
+/* 🔥 ANIMACIÓN LOADING */
+@keyframes shimmer {
+  0% {
+    background-position: -200%;
+  }
+  100% {
+    background-position: 200%;
+  }
 }
 
-/* ========================= */
-/* RAREZAS */
-/* ========================= */
-
-.rarity-common{
-  border: 1px solid #777;
-}
-
-.rarity-uncommon{
-  border: 1px solid #2ecc71;
-  box-shadow: 0 0 10px rgba(46,204,113,0.4);
-}
-
-.rarity-rare{
-  border: 1px solid #3498db;
-  box-shadow: 0 0 14px rgba(52,152,219,0.6);
-}
-
-.rarity-mythic{
-  border: 1px solid gold;
-  box-shadow:
-    0 0 12px gold,
-    0 0 20px rgba(255,215,0,0.6),
-    inset 0 0 10px rgba(255,255,255,0.2);
-}
-
-/* EFECTO HOLO */
-.rarity-mythic .cardShine{
-  background: linear-gradient(
-    120deg,
-    transparent,
-    rgba(255,255,255,0.6),
-    rgba(255,0,200,0.3),
-    rgba(0,200,255,0.3),
-    transparent
-  );
-}
-
-/* ========================= */
-/* TIPOS POKEMON */
-/* ========================= */
-
-.type-fire{
-  border-color: #ff4d4d;
-  box-shadow: 0 0 12px rgba(255, 77, 77, 0.4);
-}
-
-.type-water{
-  border-color: #3498db;
-  box-shadow: 0 0 12px rgba(52, 152, 219, 0.4);
-}
-
-.type-grass{
-  border-color: #2ecc71;
-  box-shadow: 0 0 12px rgba(46, 204, 113, 0.4);
-}
-
-.type-electric{
-  border-color: #f1c40f;
-  box-shadow: 0 0 12px rgba(241, 196, 15, 0.5);
-}
-
-.type-psychic{
-  border-color: #9b59b6;
-  box-shadow: 0 0 12px rgba(155, 89, 182, 0.4);
-}
-
-.type-ice{
-  border-color: #5dade2;
-  box-shadow: 0 0 12px rgba(93, 173, 226, 0.4);
-}
-
-.type-fighting{
-  border-color: #e67e22;
-  box-shadow: 0 0 12px rgba(230, 126, 34, 0.4);
-}
-
-.type-dark{
-  border-color: #34495e;
-  box-shadow: 0 0 12px rgba(52, 73, 94, 0.5);
-}
-
-.type-fairy{
-  border-color: #ff9ff3;
-  box-shadow: 0 0 12px rgba(255, 159, 243, 0.5);
-}
-
-/* ========================= */
-/* RESPONSIVE */
-/* ========================= */
-
-@media (max-width: 1024px){
-  .cardsGrid{
+/* 🔥 RESPONSIVE */
+@media (max-width: 1024px) {
+  .card-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 768px){
-  .cardsGrid{
+@media (max-width: 768px) {
+  .card-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 480px){
-  .cardsGrid{
-    grid-template-columns: 1fr;
+@media (max-width: 480px) {
+  .card-grid {
+    grid-template-columns: repeat(1, 1fr);
   }
+}
+
+/* 🔥 ANIMACIÓN ENTRADA */
+.card {
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 🔥 CLICK ANIMACIÓN */
+.card:active {
+  transform: scale(0.97);
+}
+
+/* 🔥 OVERLAY */
+.cardModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 999;
+}
+
+/* 🔥 MODAL */
+.cardModal {
+  background: #0f172a;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 900px;
+
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
+/* 🔥 ANIMACIÓN MODAL */
+.animateModal {
+  animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 🔥 CONTENIDO */
+.cardModalContent {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* 🔥 IMAGEN */
+.cardModalImage img {
+  width: 250px;
+  border-radius: 12px;
+}
+
+/* 🔥 INFO */
+.cardModalInfo {
+  color: white;
+  flex: 1;
+}
+
+.cardModalInfo h2 {
+  margin-bottom: 10px;
+}
+
+/* 🔥 META */
+.cardMeta {
+  margin-bottom: 10px;
+}
+
+/* 🔥 TEXTO */
+.cardText {
+  opacity: 0.8;
+}
+
+/* 🔥 BOTÓN CERRAR */
+.cardModalClose {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+
+  background: #ff4757;
+  border: none;
+  color: white;
+
+  padding: 6px 10px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* 🔥 TRANSICIÓN PÁGINA */
+.fadePage {
+  animation: fadeInPage 0.4s ease;
+}
+
+@keyframes fadeInPage {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 🔥 MODAL GLOW */
+.glowModal {
+  box-shadow:
+    0 0 20px rgba(255, 255, 255, 0.1),
+    0 0 40px rgba(0, 150, 255, 0.2),
+    0 0 80px rgba(0, 150, 255, 0.3);
+}
+
+/* 🔥 IMAGEN MODAL */
+.cardModalImage img {
+  width: 250px;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.cardModalImage img:hover {
+  transform: scale(1.05);
+}
+
+/* 🌈 HOLOGRÁFICO */
+.card.holo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+
+  background: linear-gradient(
+    120deg,
+    rgba(255, 0, 150, 0.2),
+    rgba(0, 200, 255, 0.2),
+    rgba(0, 255, 150, 0.2),
+    rgba(255, 255, 0, 0.2)
+  );
+
+  mix-blend-mode: color-dodge;
+  opacity: 0;
+  transition: 0.3s;
+}
+
+.card.holo:hover::after {
+  opacity: 1;
+}
+
+/* 🔁 TRANSICIÓN ENTRE PÁGINAS */
+.pageTransition {
+  animation: fadeSlide 0.4s ease;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body.dark {
+  background: #020617;
+  color: white;
+}
+
+body.dark .card {
+  background: rgba(255,255,255,0.05);
+}
+
+body.dark .card-info {
+  background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+}
+
+body.dark .favorite-btn {
+  background: rgba(255,255,255,0.9);
+  color: black;
+}
+
+/* 🎨 MAGIC */
+.card.magic {
+  border: 2px solid #facc15;
+}
+
+/* 🎨 POKEMON */
+.card.pokemon {
+  border: 2px solid #3b82f6;
+}
+
+/* 🎨 YUGIOH */
+.card.yugioh {
+  border: 2px solid #a855f7;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #1e293b;
+  color: white;
+  transition: 0.2s;
+}
+
+.tab:hover {
+  transform: translateY(-2px);
+}
+
+.tab.active {
+  background: #3b82f6;
 }

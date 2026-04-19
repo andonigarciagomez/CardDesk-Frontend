@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import CardGrid from "../components/CardGrid";
 import { getMagicCards } from "../api/cardsApi";
 import { getPokemonCards } from "../api/pokemonApi";
+import { getYugiohCards } from "../api/yugiohApi";
 import bannerImg from "../assets/carddesk-banner.png";
 
 export default function Home() {
@@ -16,18 +17,37 @@ export default function Home() {
   const [collectionType, setCollectionType] = useState("magic");
 
   const [filters, setFilters] = useState({
-    search: "",
-    colors: "",
-    rarity: "",
-    types: "",
-  });
+  search: "",
+  colors: "",
+  rarity: "",
+  types: "",
+  yugiohType: "",
+  yugiohAttribute: "",
+});
 
-  const [formValues, setFormValues] = useState({
-    search: "",
-    colors: "",
-    rarity: "",
-    types: "",
-  });
+const [formValues, setFormValues] = useState({
+  search: "",
+  colors: "",
+  rarity: "",
+  types: "",
+  yugiohType: "",
+  yugiohAttribute: "",
+});
+
+  const normalizeCards = (data) => {
+  return data
+    .map((card) => ({
+      id: card.id,
+      name: card.name,
+      image:
+        card.imageUrl ||
+        card.images?.small ||
+        card.card_images?.[0]?.image_url || // 🔥 YuGiOh
+        null,
+      raw: card,
+    }))
+    .filter((card) => card.image);
+};
 
   const loadCards = async (currentFilters, pageNumber, currentCollection) => {
     try {
@@ -36,18 +56,60 @@ export default function Home() {
 
       let data = [];
 
+      if (currentCollection === "all") {
+        const [magic, pokemon, yugioh] = await Promise.all([
+          getMagicCards({ ...currentFilters, page: pageNumber }),
+          getPokemonCards({ search: currentFilters.search, page: pageNumber }),
+          getYugiohCards({ search: currentFilters.search, page: pageNumber }),
+        ]);
+
+        data = normalizeCards([
+          ...magic,
+          ...pokemon,
+          ...yugioh,
+        ]);
+      }
+
       if (currentCollection === "magic") {
-        data = await getMagicCards({
+        const res = await getMagicCards({
           ...currentFilters,
           page: pageNumber,
         });
+
+        data = normalizeCards(res);
       }
 
       if (currentCollection === "pokemon") {
-        data = await getPokemonCards({
+        const res = await getPokemonCards({
           search: currentFilters.search,
           page: pageNumber,
         });
+
+        data = normalizeCards(res);
+      }
+
+      if (currentCollection === "yugioh") {
+        let res = await getYugiohCards({
+          search: currentFilters.search,
+          page: pageNumber,
+        });
+
+        // 🔥 FILTROS PRO
+        if (currentFilters.yugiohType) {
+          res = res.filter((c) =>
+            c.type?.toLowerCase().includes(
+              currentFilters.yugiohType.toLowerCase()
+            )
+          );
+        }
+
+        if (currentFilters.yugiohAttribute) {
+          res = res.filter(
+            (c) => c.attribute === currentFilters.yugiohAttribute
+          );
+        }
+
+        data = normalizeCards(res);
       }
 
       setCards(data);
@@ -93,32 +155,70 @@ export default function Home() {
 
   return (
     <section className="homePage">
+
+      {/* 🔥 HERO MEJORADO */}
       <div className="heroBanner card">
-        <img src={bannerImg} alt="CardDesk banner" className="heroBanner__image" />
+        <img
+          src={bannerImg}
+          alt="CardDesk banner"
+          className="heroBanner__image"
+        />
         <div className="heroBanner__overlay">
           <h1 className="heroBanner__title">CardDesk</h1>
           <p className="heroBanner__text">
-            Explora, guarda y organiza tus cartas favoritas de Magic y Pokémon.
+            Explora, guarda y organiza tus cartas favoritas
           </p>
         </div>
       </div>
 
+      {/* 🔍 FILTROS */}
       <div className="card">
         <div className="cardBody">
           <form onSubmit={handleSubmit} className="searchFilters">
+
             <div className="searchFilters__group">
               <label className="label">Colección</label>
-              <select
-                className="input"
-                value={collectionType}
-                onChange={(e) => {
-                  setCollectionType(e.target.value);
-                  setPage(1);
-                }}
-              >
-                <option value="magic">Magic</option>
-                <option value="pokemon">Pokémon</option>
-              </select>
+              <div className="tabs">
+                <button
+                  className={`tab ${collectionType === "magic" ? "active" : ""}`}
+                  onClick={() => {
+                    setCollectionType("magic");
+                    setPage(1);
+                  }}
+                >
+                  🧙 Magic
+                </button>
+
+                <button
+                  className={`tab ${collectionType === "pokemon" ? "active" : ""}`}
+                  onClick={() => {
+                    setCollectionType("pokemon");
+                    setPage(1);
+                  }}
+                >
+                  ⚡ Pokémon
+                </button>
+
+                <button
+                  className={`tab ${collectionType === "yugioh" ? "active" : ""}`}
+                  onClick={() => {
+                    setCollectionType("yugioh");
+                    setPage(1);
+                  }}
+                >
+                  🐉 Yu-Gi-Oh
+                </button>
+
+                <button
+                  className={`tab ${collectionType === "all" ? "active" : ""}`}
+                  onClick={() => {
+                    setCollectionType("all");
+                    setPage(1);
+                  }}
+                >
+                  🌍 Explorar
+                </button>
+              </div>
             </div>
 
             <div className="searchFilters__group searchFilters__group--full">
@@ -187,6 +287,41 @@ export default function Home() {
               </>
             )}
 
+            {collectionType === "yugioh" && (
+            <>
+              <div className="searchFilters__group">
+                <label>Tipo</label>
+                <select
+                  name="yugiohType"
+                  value={formValues.yugiohType}
+                  onChange={handleChange}
+                >
+                  <option value="">Todos</option>
+                  <option value="Monster">Monster</option>
+                  <option value="Spell">Spell</option>
+                  <option value="Trap">Trap</option>
+                </select>
+              </div>
+
+              <div className="searchFilters__group">
+                <label>Atributo</label>
+                <select
+                  name="yugiohAttribute"
+                  value={formValues.yugiohAttribute}
+                  onChange={handleChange}
+                >
+                  <option value="">Todos</option>
+                  <option value="LIGHT">LIGHT</option>
+                  <option value="DARK">DARK</option>
+                  <option value="EARTH">EARTH</option>
+                  <option value="WATER">WATER</option>
+                  <option value="FIRE">FIRE</option>
+                  <option value="WIND">WIND</option>
+                </select>
+              </div>
+            </>
+          )}
+
             <div className="searchFilters__actions">
               <button className="btn btnPrimary">Buscar</button>
 
@@ -202,10 +337,22 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="homeResults">
-        {loading && <p>Cargando cartas...</p>}
-        {error && <p>{error}</p>}
+      {/* 📊 RESULTADOS */}
+      <div className="homeResults pageTransition">
 
+        {/* 🔥 SKELETON PRO */}
+        {loading && (
+          <div className="skeleton-grid">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="skeleton-card"></div>
+            ))}
+          </div>
+        )}
+
+        {/* ❌ ERROR */}
+        {!loading && error && <p>{error}</p>}
+
+        {/* ✅ CARTAS */}
         {!loading && !error && cards.length > 0 && (
           <>
             <CardGrid cards={cards} onSelectCard={setSelectedCard} />
@@ -236,51 +383,48 @@ export default function Home() {
         )}
       </div>
 
+      {/* 🧠 MODAL */}
       {selectedCard && (
         <div
-          className="cardModalOverlay"
+          className="cardModalOverlay fadePage"
           onClick={() => setSelectedCard(null)}
         >
           <div
-            className="cardModal"
+            className="cardModal animateModal glowModal"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="cardModalClose btn btnDanger"
+              className="cardModalClose"
               onClick={() => setSelectedCard(null)}
             >
-              X
+              ✕
             </button>
 
             <div className="cardModalContent">
+
+              {/* IMAGEN */}
               <div className="cardModalImage">
                 <img
-                  src={selectedCard.imageUrl}
+                  src={selectedCard.image}
                   alt={selectedCard.name}
                 />
               </div>
 
+              {/* INFO */}
               <div className="cardModalInfo">
-                <h3>{selectedCard.name}</h3>
+                <h2>{selectedCard.name}</h2>
 
-                <p>
-                  <strong>Set:</strong> {selectedCard.setName}
-                </p>
+                <div className="cardMeta">
+                  <p><strong>Set:</strong> {selectedCard.raw?.setName || "N/A"}</p>
+                  <p><strong>Rareza:</strong> {selectedCard.raw?.rarity || "N/A"}</p>
+                  <p><strong>Tipo:</strong> {selectedCard.raw?.type || selectedCard.raw?.types?.join(", ") || "N/A"}</p>
+                </div>
 
-                <p>
-                  <strong>Rareza:</strong> {selectedCard.rarity}
-                </p>
-
-                <p>
-                  <strong>Tipo:</strong>{" "}
-                  {selectedCard.type || selectedCard.types?.join(", ")}
-                </p>
-
-                <p>
-                  <strong>Texto:</strong>{" "}
-                  {selectedCard.text || "Sin descripción"}
+                <p className="cardText">
+                  {selectedCard.raw?.text || "Sin descripción"}
                 </p>
               </div>
+
             </div>
           </div>
         </div>

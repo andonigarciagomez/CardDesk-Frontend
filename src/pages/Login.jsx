@@ -16,6 +16,24 @@ export default function Login() {
     navigate("/my-cards");
   };
 
+  const handleLogin = async () => {
+  try {
+    const res = await axios.post("http://localhost:3000/api/auth/login", {
+      email,
+      password,
+    });
+
+    // 🔥 GUARDAR TOKEN
+    localStorage.setItem("token", res.data.token);
+
+    // opcional: guardar usuario
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
   return (
     <section className="authPage">
       <div className="authWrap">

@@ -1,34 +1,32 @@
-import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useFavorites } from "../context/FavoritesContext";
+import { useEffect, useState } from "react";
+import { getFavorites } from "../services/favoriteService";
 
-export default function Profile() {
-  const { user } = useAuth();
-  const { favorites } = useFavorites();
+const Profile = () => {
+  const [favorites, setFavorites] = useState([]);
+
+  useEffect(() => {
+    loadFavorites();
+  }, []);
+
+  const loadFavorites = async () => {
+    const data = await getFavorites();
+    setFavorites(data);
+  };
 
   return (
-    <section className="profilePage">
-      <div className="card">
-        <div className="cardBody">
-          <h1 className="h1">Mi perfil</h1>
+    <div>
+      <h2>Mis Favoritos ⭐</h2>
 
-          <div className="profileInfo">
-            <p className="p">
-              <strong>Email:</strong> {user?.email}
-            </p>
-
-            <p className="p">
-              <strong>Cartas favoritas:</strong> {favorites.length}
-            </p>
+      <div className="card-grid">
+        {favorites.map((card) => (
+          <div key={card.card_id} className="card">
+            <img src={card.image_url} alt={card.name} />
+            <p>{card.name}</p>
           </div>
-
-          <div className="profileActions">
-            <Link to="/my-cards" className="btn btnPrimary">
-              Ver mi colección
-            </Link>
-          </div>
-        </div>
+        ))}
       </div>
-    </section>
+    </div>
   );
-}
+};
+
+export default Profile;
