@@ -1,12 +1,22 @@
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo.png";
+import { useNavigate } from "react-router-dom";
+
+const navigate = useNavigate();
 
 export default function Navbar() {
   const { token, user, logout } = useAuth();
 
   const getNavClass = ({ isActive }) =>
     isActive ? "navLink navLinkActive" : "navLink";
+
+  const handleLogout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  navigate("/login");
+};
 
   return (
     <header className="header">

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import axios from "axios";
 
 export default function Register() {
   const { login } = useAuth();
@@ -9,17 +10,56 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const onSubmit = (e) => {
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit = async (e) => {
     e.preventDefault();
 
-    login({ email });
-    navigate("/my-cards");
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await axios.post(
+        "https://TU-BACKEND.onrender.com/api/auth/register", // ⚠️ CAMBIA ESTO
+        {
+          email,
+          password,
+        }
+      );
+
+      // 🔐 guardar token (si tu backend lo devuelve)
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+      }
+
+      // 👤 guardar usuario
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      // 🔥 contexto
+      login(res.data.user);
+
+      // 🚀 redirigir
+      navigate("/my-cards");
+
+    } catch (err) {
+      console.error(err);
+
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError("Error al registrar usuario");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <section className="authPage">
       <div className="authWrap">
         <div className="authCard card">
+
           <div className="authTop">
             <span className="authIcon">✨</span>
             <h1 className="authTitle">Crear cuenta</h1>
@@ -29,12 +69,10 @@ export default function Register() {
           </div>
 
           <form onSubmit={onSubmit} className="form">
+
             <div className="formGroup">
-              <label className="label" htmlFor="email">
-                Email
-              </label>
+              <label className="label">Email</label>
               <input
-                id="email"
                 type="email"
                 className="input"
                 value={email}
@@ -45,11 +83,8 @@ export default function Register() {
             </div>
 
             <div className="formGroup">
-              <label className="label" htmlFor="password">
-                Contraseña
-              </label>
+              <label className="label">Contraseña</label>
               <input
-                id="password"
                 type="password"
                 className="input"
                 value={password}
@@ -59,9 +94,17 @@ export default function Register() {
               />
             </div>
 
-            <button type="submit" className="btn btnPrimary authButton">
-              Crear cuenta
+            {/* ❌ ERROR */}
+            {error && <p style={{ color: "red" }}>{error}</p>}
+
+            <button
+              type="submit"
+              className="btn btnPrimary authButton"
+              disabled={loading}
+            >
+              {loading ? "Creando cuenta..." : "Crear cuenta"}
             </button>
+
           </form>
 
           <p className="authBottomText">
@@ -70,6 +113,7 @@ export default function Register() {
               Inicia sesión
             </Link>
           </p>
+
         </div>
       </div>
     </section>

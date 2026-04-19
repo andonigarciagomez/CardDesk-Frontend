@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import axios from "axios";
 
 export default function Login() {
   const { login } = useAuth();
@@ -9,35 +10,47 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const onSubmit = (e) => {
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit = async (e) => {
     e.preventDefault();
 
-    login({ email });
-    navigate("/my-cards");
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await axios.post(
+        "https://TU-BACKEND.onrender.com/api/auth/login", // ⚠️ CAMBIA ESTO
+        {
+          email,
+          password,
+        }
+      );
+
+      // 🔐 guardar token
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      // 🔥 contexto
+      login(res.data.user);
+
+      // 🚀 redirigir
+      navigate("/my-cards");
+
+    } catch (err) {
+      console.error(err);
+      setError("Email o contraseña incorrectos");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const handleLogin = async () => {
-  try {
-    const res = await axios.post("http://localhost:3000/api/auth/login", {
-      email,
-      password,
-    });
-
-    // 🔥 GUARDAR TOKEN
-    localStorage.setItem("token", res.data.token);
-
-    // opcional: guardar usuario
-    localStorage.setItem("user", JSON.stringify(res.data.user));
-
-  } catch (error) {
-    console.error(error);
-  }
-};
 
   return (
     <section className="authPage">
       <div className="authWrap">
         <div className="authCard card">
+
           <div className="authTop">
             <span className="authIcon">🔐</span>
             <h1 className="authTitle">Iniciar sesión</h1>
@@ -47,12 +60,10 @@ export default function Login() {
           </div>
 
           <form onSubmit={onSubmit} className="form">
+
             <div className="formGroup">
-              <label className="label" htmlFor="email">
-                Email
-              </label>
+              <label className="label">Email</label>
               <input
-                id="email"
                 type="email"
                 className="input"
                 value={email}
@@ -63,11 +74,8 @@ export default function Login() {
             </div>
 
             <div className="formGroup">
-              <label className="label" htmlFor="password">
-                Contraseña
-              </label>
+              <label className="label">Contraseña</label>
               <input
-                id="password"
                 type="password"
                 className="input"
                 value={password}
@@ -77,8 +85,15 @@ export default function Login() {
               />
             </div>
 
-            <button type="submit" className="btn btnPrimary authButton">
-              Entrar
+            {/* ❌ ERROR */}
+            {error && <p style={{ color: "red" }}>{error}</p>}
+
+            <button
+              type="submit"
+              className="btn btnPrimary authButton"
+              disabled={loading}
+            >
+              {loading ? "Entrando..." : "Entrar"}
             </button>
           </form>
 
@@ -88,6 +103,7 @@ export default function Login() {
               Regístrate
             </Link>
           </p>
+
         </div>
       </div>
     </section>
