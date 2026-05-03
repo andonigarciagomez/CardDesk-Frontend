@@ -5,7 +5,7 @@ export const getPokemonCards = async ({
   page = 1,
 } = {}) => {
 
-  const limit = 12;
+  const limit = 30;
   const offset = (page - 1) * limit;
 
   let url = `${BASE_URL}?limit=${limit}&offset=${offset}`;
@@ -38,25 +38,16 @@ export const getPokemonCards = async ({
 
 
 // 🔥 adaptamos a formato de tu app
+// En pokemonApi.js
 const transformPokemon = (pokemon) => ({
   id: pokemon.id,
   name: pokemon.name,
-
-  imageUrl:
-    pokemon.sprites.other["official-artwork"].front_default ||
-    pokemon.sprites.front_default,
-
+  imageUrl: pokemon.sprites.other["official-artwork"].front_default || pokemon.sprites.front_default,
   setName: "Pokémon",
-
   rarity: getRarityFromStats(pokemon.base_experience),
-
   type: pokemon.types.map((t) => t.type.name).join(", "),
-
-  types: pokemon.types.map((t) => t.type.name),
-
-  text: `HP: ${pokemon.stats[0].base_stat} | Ataque: ${pokemon.stats[1].base_stat}`,
-
-  source: "pokemon",
+  source: "pokemon", // 🔥 ESTO ES LO QUE FILTRA
+  raw: pokemon // opcional por si necesitas más datos luego
 });
 
 

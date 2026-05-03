@@ -17,22 +17,21 @@ export default function AppRouter() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-
           <Route
             path="/profile"
             element={
-              <ProtectedRoute>
+              <PrivateRoute>
                 <Profile />
-              </ProtectedRoute>
+              </PrivateRoute>
             }
           />
 
           <Route
             path="/my-cards"
             element={
-              <ProtectedRoute>
+              <PrivateRoute>
                 <MyCards />
-              </ProtectedRoute>
+              </PrivateRoute>
             }
           />
 

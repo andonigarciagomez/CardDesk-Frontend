@@ -3,7 +3,8 @@ import CardGrid from "../components/CardGrid";
 import { getMagicCards } from "../api/cardsApi";
 import { getPokemonCards } from "../api/pokemonApi";
 import { getYugiohCards } from "../api/yugiohApi";
-import bannerImg from "../assets/carddesk-banner.png";
+import bannerImg from "../assets/banner-new.png";
+import CollectionTabs from "../components/CollectionTabs";
 
 export default function Home() {
   const [cards, setCards] = useState([]);
@@ -13,42 +14,32 @@ export default function Home() {
   const [error, setError] = useState("");
 
   const [page, setPage] = useState(1);
-
   const [collectionType, setCollectionType] = useState("magic");
 
   const [filters, setFilters] = useState({
-  search: "",
-  colors: "",
-  rarity: "",
-  types: "",
-  yugiohType: "",
-  yugiohAttribute: "",
-});
+    search: "",
+    colors: "",
+    rarity: "",
+    types: "",
+    yugiohType: "",
+    yugiohAttribute: "",
+  });
 
-const [formValues, setFormValues] = useState({
-  search: "",
-  colors: "",
-  rarity: "",
-  types: "",
-  yugiohType: "",
-  yugiohAttribute: "",
-});
+  const [formValues, setFormValues] = useState({ ...filters });
 
-  const normalizeCards = (data) => {
-  return data
-    .map((card) => ({
+  // 🔥 NORMALIZADOR GLOBAL
+  const normalizeCards = (data, type) => {
+    return data.map((card) => ({
       id: card.id,
       name: card.name,
-      image:
-        card.imageUrl ||
-        card.images?.small ||
-        card.card_images?.[0]?.image_url || // 🔥 YuGiOh
-        null,
-      raw: card,
-    }))
-    .filter((card) => card.image);
-};
+      image: card.image || card.imageUrl || card.card_images?.[0]?.image_url,
+      // 🔥 Si el objeto ya trae "source" lo usamos, si no, usamos el "type" del tab
+      source: card.source || type, 
+      raw: card.raw || card
+    }));
+  };
 
+  // 🔥 CARGA DE CARTAS
   const loadCards = async (currentFilters, pageNumber, currentCollection) => {
     try {
       setLoading(true);
@@ -63,11 +54,7 @@ const [formValues, setFormValues] = useState({
           getYugiohCards({ search: currentFilters.search, page: pageNumber }),
         ]);
 
-        data = normalizeCards([
-          ...magic,
-          ...pokemon,
-          ...yugioh,
-        ]);
+        data = normalizeCards([...magic, ...pokemon, ...yugioh]);
       }
 
       if (currentCollection === "magic") {
@@ -75,7 +62,6 @@ const [formValues, setFormValues] = useState({
           ...currentFilters,
           page: pageNumber,
         });
-
         data = normalizeCards(res);
       }
 
@@ -84,30 +70,34 @@ const [formValues, setFormValues] = useState({
           search: currentFilters.search,
           page: pageNumber,
         });
+        
+        let dataNormalized = normalizeCards(res);
 
-        data = normalizeCards(res);
+        // 🔥 FILTRO POR TIPO ELEMENTAL
+        if (currentFilters.types) {
+          dataNormalized = dataNormalized.filter(card => 
+            card.raw.types.some(t => t.type.name === currentFilters.types)
+          );
+        }
+
+        // 🔥 FILTRO POR RAREZA (usando la lógica de stats de tu pokemonApi.js)
+        if (currentFilters.rarity) {
+          dataNormalized = dataNormalized.filter(card => 
+            card.raw.rarity === currentFilters.rarity
+          );
+        }
+
+        data = dataNormalized;
       }
 
       if (currentCollection === "yugioh") {
-        let res = await getYugiohCards({
+        const res = await getYugiohCards({
           search: currentFilters.search,
+          type: currentFilters.yugiohType,       // Filtro directo
+          attribute: currentFilters.yugiohAttribute, // Filtro directo
+          level: currentFilters.yugiohLevel,     // Nuevo filtro
           page: pageNumber,
         });
-
-        // 🔥 FILTROS PRO
-        if (currentFilters.yugiohType) {
-          res = res.filter((c) =>
-            c.type?.toLowerCase().includes(
-              currentFilters.yugiohType.toLowerCase()
-            )
-          );
-        }
-
-        if (currentFilters.yugiohAttribute) {
-          res = res.filter(
-            (c) => c.attribute === currentFilters.yugiohAttribute
-          );
-        }
 
         data = normalizeCards(res);
       }
@@ -125,13 +115,10 @@ const [formValues, setFormValues] = useState({
     loadCards(filters, page, collectionType);
   }, [filters, page, collectionType]);
 
+  // 🔥 FORM
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setFormValues((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormValues((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e) => {
@@ -141,28 +128,28 @@ const [formValues, setFormValues] = useState({
   };
 
   const handleReset = () => {
-    const emptyFilters = {
+    const empty = {
       search: "",
       colors: "",
       rarity: "",
       types: "",
+      yugiohType: "",
+      yugiohAttribute: "",
     };
 
-    setFormValues(emptyFilters);
-    setFilters(emptyFilters);
+    setFormValues(empty);
+    setFilters(empty);
     setPage(1);
   };
 
+  const visibleCards = cards.slice(0, 24);
+  
   return (
     <section className="homePage">
 
-      {/* 🔥 HERO MEJORADO */}
+      {/* HERO */}
       <div className="heroBanner card">
-        <img
-          src={bannerImg}
-          alt="CardDesk banner"
-          className="heroBanner__image"
-        />
+        <img src={bannerImg} alt="CardDesk banner" className="heroBanner__image" />
         <div className="heroBanner__overlay">
           <h1 className="heroBanner__title">CardDesk</h1>
           <p className="heroBanner__text">
@@ -171,77 +158,91 @@ const [formValues, setFormValues] = useState({
         </div>
       </div>
 
-      {/* 🔍 FILTROS */}
-      <div className="card">
+      {/* FILTROS */}
+      <div className="cardContainer">
         <div className="cardBody">
           <form onSubmit={handleSubmit} className="searchFilters">
 
-            <div className="searchFilters__group">
-              <label className="label">Colección</label>
-              <div className="tabs">
-                <button
-                  className={`tab ${collectionType === "magic" ? "active" : ""}`}
-                  onClick={() => {
-                    setCollectionType("magic");
+            {/* FILA 1: Colección y Nombre */}
+            <div className="searchFilters__top">
+              <div className="searchFilters__group">
+                <label className="label">Colección</label>
+                <CollectionTabs
+                  value={collectionType}
+                  onChange={(value) => {
+                    setCollectionType(value);
                     setPage(1);
                   }}
-                >
-                  🧙 Magic
-                </button>
+                />
+              </div>
 
-                <button
-                  className={`tab ${collectionType === "pokemon" ? "active" : ""}`}
-                  onClick={() => {
-                    setCollectionType("pokemon");
-                    setPage(1);
-                  }}
-                >
-                  ⚡ Pokémon
-                </button>
-
-                <button
-                  className={`tab ${collectionType === "yugioh" ? "active" : ""}`}
-                  onClick={() => {
-                    setCollectionType("yugioh");
-                    setPage(1);
-                  }}
-                >
-                  🐉 Yu-Gi-Oh
-                </button>
-
-                <button
-                  className={`tab ${collectionType === "all" ? "active" : ""}`}
-                  onClick={() => {
-                    setCollectionType("all");
-                    setPage(1);
-                  }}
-                >
-                  🌍 Explorar
-                </button>
+              <div className="searchFilters__group">
+                <label className="label">Buscar por nombre</label>
+                <input
+                  name="search"
+                  className="input"
+                  value={formValues.search}
+                  onChange={handleChange}
+                  placeholder="Ej: Mago Oscuro..."
+                />
               </div>
             </div>
 
-            <div className="searchFilters__group searchFilters__group--full">
-              <label className="label">Nombre</label>
-              <input
-                name="search"
-                className="input"
-                value={formValues.search}
-                onChange={handleChange}
-                placeholder="Buscar carta..."
-              />
+            {/* FILA 2: Filtros específicos dinámicos */}
+            <div className="searchFilters__grid">
+              {collectionType === "yugioh" && (
+                <>
+                  <div className="searchFilters__group">
+                    <label className="label">Tipo</label>
+                    <select name="yugiohType" className="input" value={formValues.yugiohType} onChange={handleChange}>
+                      <option value="">Todos</option>
+                      <option value="Monster">Monstruo</option>
+                      <option value="Spell">Magia</option>
+                      <option value="Trap">Trampa</option>
+                    </select>
+                  </div>
+
+                  <div className="searchFilters__group">
+                    <label className="label">Atributo</label>
+                    <select name="yugiohAttribute" className="input" value={formValues.yugiohAttribute} onChange={handleChange}>
+                      <option value="">Todos</option>
+                      <option value="DARK">OSCURIDAD</option>
+                      <option value="LIGHT">LUZ</option>
+                      {/* ...resto de opciones */}
+                    </select>
+                  </div>
+
+                  <div className="searchFilters__group">
+                    <label className="label">Nivel</label>
+                    <select name="yugiohLevel" className="input" value={formValues.yugiohLevel} onChange={handleChange}>
+                      <option value="">Cualquiera</option>
+                      {[...Array(12)].map((_, i) => (
+                        <option key={i+1} value={i+1}>{i+1}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+              
+              {/* Aquí irían los filtros de Pokémon cuando selecciones esa pestaña */}
             </div>
 
+            {/* BOTONES AL FINAL */}
+            <div className="searchFilters__actions">
+              <button type="button" className="btn btnGhost" onClick={handleReset}>
+                Limpiar Filtros
+              </button>
+              <button type="submit" className="btn btnPrimary">
+                🔍 Buscar Cartas
+              </button>
+            </div>
+
+            {/* 🔥 MAGIC */}
             {collectionType === "magic" && (
               <>
-                <div className="searchFilters__group">
+                <div className="searchFilters__group searchFilters__tipo">
                   <label className="label">Color</label>
-                  <select
-                    name="colors"
-                    className="input"
-                    value={formValues.colors}
-                    onChange={handleChange}
-                  >
+                  <select name="colors" className="input" value={formValues.colors} onChange={handleChange}>
                     <option value="">Todos</option>
                     <option value="White">White</option>
                     <option value="Blue">Blue</option>
@@ -251,14 +252,9 @@ const [formValues, setFormValues] = useState({
                   </select>
                 </div>
 
-                <div className="searchFilters__group">
+                <div className="searchFilters__group searchFilters__atributo">
                   <label className="label">Rareza</label>
-                  <select
-                    name="rarity"
-                    className="input"
-                    value={formValues.rarity}
-                    onChange={handleChange}
-                  >
+                  <select name="rarity" className="input" value={formValues.rarity} onChange={handleChange}>
                     <option value="">Todas</option>
                     <option value="Common">Common</option>
                     <option value="Uncommon">Uncommon</option>
@@ -267,14 +263,9 @@ const [formValues, setFormValues] = useState({
                   </select>
                 </div>
 
-                <div className="searchFilters__group">
+                <div className="searchFilters__group searchFilters__tipo">
                   <label className="label">Tipo</label>
-                  <select
-                    name="types"
-                    className="input"
-                    value={formValues.types}
-                    onChange={handleChange}
-                  >
+                  <select name="types" className="input" value={formValues.types} onChange={handleChange}>
                     <option value="">Todos</option>
                     <option value="Creature">Creature</option>
                     <option value="Instant">Instant</option>
@@ -287,60 +278,106 @@ const [formValues, setFormValues] = useState({
               </>
             )}
 
-            {collectionType === "yugioh" && (
-            <>
-              <div className="searchFilters__group">
-                <label>Tipo</label>
-                <select
-                  name="yugiohType"
-                  value={formValues.yugiohType}
-                  onChange={handleChange}
-                >
-                  <option value="">Todos</option>
-                  <option value="Monster">Monster</option>
-                  <option value="Spell">Spell</option>
-                  <option value="Trap">Trap</option>
-                </select>
-              </div>
+            {/* 🔥 POKÉMON  */}
+              {collectionType === "pokemon" && (
+                <>
+                  <div className="searchFilters__group searchFilters__tipo">
+                    <label className="label">Tipo Elemental</label>
+                    <select 
+                      name="types" 
+                      className="input" 
+                      value={formValues.types} 
+                      onChange={handleChange}
+                    >
+                      <option value="">Todos los tipos</option>
+                      <option value="fire">Fuego 🔥</option>
+                      <option value="water">Agua 💧</option>
+                      <option value="grass">Planta 🌿</option>
+                      <option value="electric">Eléctrico ⚡</option>
+                      <option value="psychic">Psíquico 🔮</option>
+                      <option value="ice">Hielo ❄️</option>
+                      <option value="dragon">Dragón 🐲</option>
+                      <option value="dark">Siniestro 🌑</option>
+                      <option value="fairy">Hada ✨</option>
+                    </select>
+                  </div>
 
-              <div className="searchFilters__group">
-                <label>Atributo</label>
-                <select
-                  name="yugiohAttribute"
-                  value={formValues.yugiohAttribute}
-                  onChange={handleChange}
-                >
-                  <option value="">Todos</option>
-                  <option value="LIGHT">LIGHT</option>
-                  <option value="DARK">DARK</option>
-                  <option value="EARTH">EARTH</option>
-                  <option value="WATER">WATER</option>
-                  <option value="FIRE">FIRE</option>
-                  <option value="WIND">WIND</option>
-                </select>
-              </div>
-            </>
-          )}
+                  {/* Puedes añadir un segundo filtro por rareza si quieres */}
+                  <div className="searchFilters__group searchFilters__atributo">
+                    <label className="label">Rareza (Simulada)</label>
+                    <select 
+                      name="rarity" 
+                      className="input" 
+                      value={formValues.rarity} 
+                      onChange={handleChange}
+                    >
+                      <option value="">Todas</option>
+                      <option value="Common">Common</option>
+                      <option value="Uncommon">Uncommon</option>
+                      <option value="Rare">Rare</option>
+                      <option value="Mythic Rare">Legendary</option>
+                    </select>
+                  </div>
+                </>
+              )}
 
+            {/* 🔥 YUGIOH */}
+              {collectionType === "yugioh" && (
+                <>
+                  <div className="searchFilters__group">
+                    <label className="label">Tipo de Carta</label>
+                    <select name="yugiohType" className="input" value={formValues.yugiohType} onChange={handleChange}>
+                      <option value="">Todos</option>
+                      <option value="Effect Monster">Efecto</option>
+                      <option value="Normal Monster">Normal</option>
+                      <option value="Spell Card">Magia</option>
+                      <option value="Trap Card">Trampa</option>
+                      <option value="Xyz Monster">Xyz</option>
+                      <option value="Synchro Monster">Sincronía</option>
+                    </select>
+                  </div>
+
+                  <div className="searchFilters__group">
+                    <label className="label">Atributo</label>
+                    <select name="yugiohAttribute" className="input" value={formValues.yugiohAttribute} onChange={handleChange}>
+                      <option value="">Todos</option>
+                      <option value="LIGHT">LUZ</option>
+                      <option value="DARK">OSCURIDAD</option>
+                      <option value="WATER">AGUA</option>
+                      <option value="FIRE">FUEGO</option>
+                      <option value="EARTH">TIERRA</option>
+                      <option value="WIND">VIENTO</option>
+                      <option value="DIVINE">DIVINO</option>
+                    </select>
+                  </div>
+
+                  <div className="searchFilters__group">
+                    <label className="label">Nivel/Rango</label>
+                    <select name="yugiohLevel" className="input" value={formValues.yugiohLevel} onChange={handleChange}>
+                      <option value="">Cualquiera</option>
+                      {[...Array(12)].map((_, i) => (
+                        <option key={i+1} value={i+1}>{i+1}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
+            {/* 🔥 BOTONES */}
             <div className="searchFilters__actions">
-              <button className="btn btnPrimary">Buscar</button>
-
-              <button
-                type="button"
-                className="btn btnGhost"
-                onClick={handleReset}
-              >
+              <button type="submit" className="btn btnPrimary">Buscar</button>
+              <button type="button" className="btn btnGhost" onClick={handleReset}>
                 Limpiar
               </button>
             </div>
+
           </form>
         </div>
       </div>
 
-      {/* 📊 RESULTADOS */}
+      {/* RESULTADOS */}
       <div className="homeResults pageTransition">
 
-        {/* 🔥 SKELETON PRO */}
         {loading && (
           <div className="skeleton-grid">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -349,29 +386,20 @@ const [formValues, setFormValues] = useState({
           </div>
         )}
 
-        {/* ❌ ERROR */}
         {!loading && error && <p>{error}</p>}
 
-        {/* ✅ CARTAS */}
         {!loading && !error && cards.length > 0 && (
           <>
-            <CardGrid cards={cards} onSelectCard={setSelectedCard} />
+            <CardGrid cards={visibleCards} onSelectCard={setSelectedCard} />
 
             <div className="pagination">
-              <button
-                className="btn btnGhost"
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-              >
+              <button className="btn btnGhost" disabled={page === 1} onClick={() => setPage(page - 1)}>
                 ← Anterior
               </button>
 
               <span className="paginationPage">Página {page}</span>
 
-              <button
-                className="btn btnPrimary"
-                onClick={() => setPage(page + 1)}
-              >
+              <button className="btn btnPrimary" onClick={() => setPage(page + 1)}>
                 Siguiente →
               </button>
             </div>
@@ -383,34 +411,17 @@ const [formValues, setFormValues] = useState({
         )}
       </div>
 
-      {/* 🧠 MODAL */}
+      {/* MODAL */}
       {selectedCard && (
-        <div
-          className="cardModalOverlay fadePage"
-          onClick={() => setSelectedCard(null)}
-        >
-          <div
-            className="cardModal animateModal glowModal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="cardModalClose"
-              onClick={() => setSelectedCard(null)}
-            >
-              ✕
-            </button>
+        <div className="cardModalOverlay fadePage" onClick={() => setSelectedCard(null)}>
+          <div className="cardModal animateModal glowModal" onClick={(e) => e.stopPropagation()}>
+            <button className="cardModalClose" onClick={() => setSelectedCard(null)}>✕</button>
 
             <div className="cardModalContent">
-
-              {/* IMAGEN */}
               <div className="cardModalImage">
-                <img
-                  src={selectedCard.image}
-                  alt={selectedCard.name}
-                />
+                <img src={selectedCard.image} alt={selectedCard.name} />
               </div>
 
-              {/* INFO */}
               <div className="cardModalInfo">
                 <h2>{selectedCard.name}</h2>
 
@@ -424,7 +435,6 @@ const [formValues, setFormValues] = useState({
                   {selectedCard.raw?.text || "Sin descripción"}
                 </p>
               </div>
-
             </div>
           </div>
         </div>

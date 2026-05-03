@@ -1,69 +1,47 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { getFavorites, addFavorite, deleteFavorite } from "../services/favoriteService";
+import { useAuth } from "./AuthContext";
 
-const FavoritesContext = createContext(null);
+const FavoritesContext = createContext();
 
-export function FavoritesProvider({ children }) {
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem("favorites");
-    return saved ? JSON.parse(saved) : [];
-  });
+export const FavoritesProvider = ({ children }) => {
+  const { token } = useAuth();
+  const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem("favorites", JSON.stringify(favorites));
-  }, [favorites]);
+    if (token) loadFavorites();
+  }, [token]);
 
-  const isFavorite = (cardId) => {
-    return favorites.some((card) => card.id === cardId);
-  };
-
-  const addFavorite = (card) => {
-    setFavorites((prev) => {
-      if (prev.some((item) => item.id === card.id)) return prev;
-      return [...prev, card];
-    });
-  };
-
-  const removeFavorite = (cardId) => {
-    setFavorites((prev) => prev.filter((card) => card.id !== cardId));
-  };
-
-  const toggleFavorite = (card) => {
-    if (isFavorite(card.id)) {
-      removeFavorite(card.id);
-    } else {
-      addFavorite(card);
+  const loadFavorites = async () => {
+    try {
+      const data = await getFavorites();
+      setFavorites(data);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const clearFavorites = () => {
-    setFavorites([]);
+  const toggleFavorite = async (card) => {
+    const exists = favorites.some(f => f.cardId === card.id);
+
+    setFavorites(prev =>
+      exists
+        ? prev.filter(f => f.cardId !== card.id)
+        : [...prev, { ...card, cardId: card.id }]
+    );
+
+    try {
+      exists ? await deleteFavorite(card.id) : await addFavorite(card);
+    } catch {
+      loadFavorites();
+    }
   };
 
-  const value = useMemo(
-    () => ({
-      favorites,
-      isFavorite,
-      addFavorite,
-      removeFavorite,
-      toggleFavorite,
-      clearFavorites,
-    }),
-    [favorites]
-  );
-
   return (
-    <FavoritesContext.Provider value={value}>
+    <FavoritesContext.Provider value={{ favorites, toggleFavorite }}>
       {children}
     </FavoritesContext.Provider>
   );
-}
+};
 
-export function useFavorites() {
-  const context = useContext(FavoritesContext);
-
-  if (!context) {
-    throw new Error("useFavorites debe usarse dentro de FavoritesProvider");
-  }
-
-  return context;
-}
+export const useFavorites = () => useContext(FavoritesContext);

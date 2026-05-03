@@ -1,26 +1,8 @@
-import { useEffect, useState } from "react";
 import clickSound from "../assets/click.mp3";
-import {
-  getFavorites,
-  addFavorite,
-  deleteFavorite,
-} from "../services/favoriteService";
+import { useFavorites } from "../context/FavoritesContext";
 
 const CardGrid = ({ cards = [], onSelectCard }) => {
-  const [favorites, setFavorites] = useState([]);
-
-  useEffect(() => {
-    loadFavorites();
-  }, []);
-
-  const loadFavorites = async () => {
-    try {
-      const data = await getFavorites();
-      setFavorites(data);
-    } catch (error) {
-      console.error("Error cargando favoritos", error);
-    }
-  };
+  const { favorites, toggleFavorite } = useFavorites();
 
   // 🔊 SONIDO
   const playSound = () => {
@@ -31,36 +13,10 @@ const CardGrid = ({ cards = [], onSelectCard }) => {
 
   // ⭐ CHECK FAVORITO
   const isFavorite = (cardId) => {
-    return favorites.some((fav) => fav.card_id === cardId);
+    return favorites.some((fav) => fav.cardId === cardId);
   };
 
-  // ⚡ FAVORITOS INSTANTÁNEOS
-  const handleToggleFavorite = async (card) => {
-    const alreadyFav = isFavorite(card.id);
-
-    setFavorites((prev) =>
-      alreadyFav
-        ? prev.filter((f) => f.card_id !== card.id)
-        : [...prev, { card_id: card.id }]
-    );
-
-    try {
-      if (alreadyFav) {
-        await deleteFavorite(card.id);
-      } else {
-        await addFavorite({
-          id: card.id,
-          name: card.name,
-          image: card.image,
-        });
-      }
-    } catch (error) {
-      console.error("Error toggle favorito", error);
-      loadFavorites(); // rollback
-    }
-  };
-
-  // 🔥 EFECTO 3D TILT
+  // 🎯 EFECTO TILT
   const handleMouseMove = (e, el) => {
     if (!el) return;
 
@@ -79,16 +35,14 @@ const CardGrid = ({ cards = [], onSelectCard }) => {
     el.style.transform = "rotateX(0) rotateY(0) scale(1)";
   };
 
-  // 🎨 CLASE POR COLECCIÓN
+  // 🎨 CLASE POR SOURCE (YA LIMPIO)
   const getCollectionClass = (card) => {
-    if (card.raw?.card_images) return "yugioh"; // Yu-Gi-Oh
-    if (card.raw?.types) return "pokemon"; // Pokémon
-    return "magic"; // Magic
+    return card.source || "magic";
   };
 
   return (
     <div className="card-grid">
-      {cards.map((card) => {
+      {cards.slice(0, 24).map((card) => {
         const isHolo =
           card.raw?.rarity === "Rare" ||
           card.raw?.rarity === "Mythic Rare";
@@ -114,18 +68,20 @@ const CardGrid = ({ cards = [], onSelectCard }) => {
               }`}
               onClick={(e) => {
                 e.stopPropagation();
-                handleToggleFavorite(card);
+
+                toggleFavorite({
+                  id: card.id,
+                  name: card.name,
+                  image: card.image,
+                  source: card.source, // 🔥 YA NO SE CALCULA
+                });
               }}
             >
               {isFavorite(card.id) ? "❤️" : "🤍"}
             </button>
 
             {/* 🖼️ IMAGEN */}
-            <img
-              src={card.image}
-              alt={card.name}
-              loading="lazy"
-            />
+            <img src={card.image} alt={card.name} loading="lazy" />
 
             {/* 📝 INFO */}
             <div className="card-info">

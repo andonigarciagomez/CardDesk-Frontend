@@ -1,101 +1,66 @@
 import { useState } from "react";
 import { useFavorites } from "../context/FavoritesContext";
-import CardGrid from "../components/CardGrid";
 
 export default function MyCards() {
-  const { favorites, clearFavorites } = useFavorites();
-  const [selectedCard, setSelectedCard] = useState(null);
+  const { favorites, toggleFavorite } = useFavorites();
+
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+
+  const filteredCards = favorites.filter((card) => {
+    const matchesSearch = card.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    const matchesFilter =
+      filter === "all" || card.source === filter;
+
+    return matchesSearch && matchesFilter;
+  });
 
   return (
     <section className="myCardsPage">
-      <div className="card">
-        <div className="cardBody">
-          <h1 className="h1">Mi colección</h1>
+      <h1 className="title">⭐ Mis cartas</h1>
 
-          <p className="p">
-            Aquí puedes ver todas las cartas que has guardado.
-          </p>
+      <input
+        className="input"
+        placeholder="Buscar carta..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
-          {favorites.length > 0 && (
-            <div className="myCardsActions">
-              <button className="btn btnDanger" onClick={clearFavorites}>
-                Vaciar colección
+      <div className="filters">
+        <button onClick={() => setFilter("all")}>Todas</button>
+        <button onClick={() => setFilter("magic")}>Magic</button>
+        <button onClick={() => setFilter("pokemon")}>Pokémon</button>
+        <button onClick={() => setFilter("yugioh")}>Yu-Gi-Oh</button>
+      </div>
+
+      {filteredCards.length === 0 ? (
+        <p>No tienes cartas que coincidan</p>
+      ) : (
+        <div className="card-grid">
+          {filteredCards.map((card) => (
+            <div key={card.cardId} className="card">
+              <button
+                className="favorite-btn active"
+                onClick={() => toggleFavorite({
+                  id: card.cardId,
+                  name: card.name,
+                  image: card.image,
+                  source: card.source
+                })}
+              >
+                ❤️
               </button>
-            </div>
-          )}
-        </div>
-      </div>
 
-      <div className="homeResults">
-        <h2 className="homeResults__title">Cartas guardadas</h2>
+              <img src={card.image} alt={card.name} />
 
-        {favorites.length > 0 ? (
-          <CardGrid
-            cards={favorites}
-            onSelectCard={setSelectedCard}
-            showRemove={true}
-          />
-        ) : (
-          <div className="card">
-            <div className="cardBody">
-              <p className="p">
-                Todavía no has guardado ninguna carta.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {selectedCard && (
-        <div
-          className="cardModalOverlay"
-          onClick={() => setSelectedCard(null)}
-        >
-          <div
-            className="cardModal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="cardModalClose btn btnDanger"
-              onClick={() => setSelectedCard(null)}
-            >
-              X
-            </button>
-
-            <div className="cardModalContent">
-              <div className="cardModalImage">
-                {selectedCard.imageUrl ? (
-                  <img src={selectedCard.imageUrl} alt={selectedCard.name} />
-                ) : (
-                  <div className="cardModalPlaceholder">🃏</div>
-                )}
-              </div>
-
-              <div className="cardModalInfo">
-                <h3>{selectedCard.name}</h3>
-
-                <p>
-                  <strong>Set:</strong> {selectedCard.setName || "N/A"}
-                </p>
-
-                <p>
-                  <strong>Rareza:</strong> {selectedCard.rarity || "N/A"}
-                </p>
-
-                <p>
-                  <strong>Tipo:</strong>{" "}
-                  {selectedCard.type ||
-                    selectedCard.types?.join(", ") ||
-                    "N/A"}
-                </p>
-
-                <p>
-                  <strong>Texto:</strong>{" "}
-                  {selectedCard.text || "Sin descripción"}
-                </p>
+              <div className="card-info">
+                <p>{card.name}</p>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       )}
     </section>

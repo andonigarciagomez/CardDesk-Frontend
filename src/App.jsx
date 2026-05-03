@@ -2,14 +2,13 @@ import { useEffect, useState } from "react";
 import { AuthProvider } from "./context/AuthContext";
 import { FavoritesProvider } from "./context/FavoritesContext";
 import AppRouter from "./router/AppRouter";
-import SplashScreen from "./components/SplashScreen";
+import LoadingScreen from "./components/LoadingScreen";
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
-  const [fadeOut, setFadeOut] = useState(false);
-
+  const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
+  // 🌙 CARGAR MODO OSCURO
   useEffect(() => {
     const savedMode = localStorage.getItem("darkMode");
 
@@ -17,21 +16,18 @@ export default function App() {
       document.body.classList.add("dark");
       setDarkMode(true);
     }
-
-    const timer1 = setTimeout(() => {
-      setFadeOut(true);
-    }, 1500);
-
-    const timer2 = setTimeout(() => {
-      setShowSplash(false);
-    }, 2000);
-
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
   }, []);
 
+  // ⏳ LOADING SCREEN
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 🌙 TOGGLE DARK MODE
   const toggleDarkMode = () => {
     document.body.classList.toggle("dark");
 
@@ -41,8 +37,9 @@ export default function App() {
     localStorage.setItem("darkMode", newMode);
   };
 
-  if (showSplash) {
-    return <SplashScreen fadeOut={fadeOut} />;
+  // 🚀 LOADING BONITO
+  if (loading) {
+    return <LoadingScreen />;
   }
 
   return (
@@ -64,6 +61,7 @@ export default function App() {
         </button>
 
         <AppRouter />
+
       </FavoritesProvider>
     </AuthProvider>
   );

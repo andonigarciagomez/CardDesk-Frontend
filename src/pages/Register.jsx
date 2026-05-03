@@ -1,54 +1,46 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import axios from "axios";
+import "../styles/auth.scss";
 
 export default function Register() {
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      setLoading(true);
-      setError("");
+    setError("");
+    setLoading(true);
 
+    try {
       const res = await axios.post(
-        "https://TU-BACKEND.onrender.com/api/auth/register", // ⚠️ CAMBIA ESTO
-        {
-          email,
-          password,
-        }
+        "http://localhost:3000/api/auth/register",
+        { email, password }
       );
 
-      // 🔐 guardar token (si tu backend lo devuelve)
-      if (res.data.token) {
-        localStorage.setItem("token", res.data.token);
-      }
+      // ✅ registro OK
+      console.log("Registro OK:", res.data);
 
-      // 👤 guardar usuario
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      // 👉 opcional: feedback visual
+      alert("Usuario creado correctamente");
 
-      // 🔥 contexto
-      login(res.data.user);
-
-      // 🚀 redirigir
-      navigate("/my-cards");
+      navigate("/login");
 
     } catch (err) {
       console.error(err);
 
-      if (err.response?.data?.error) {
-        setError(err.response.data.error);
+      // 🔥 AQUÍ ESTÁ LA CLAVE
+      if (err.response) {
+        // error del backend
+        setError(err.response.data.message || "Error al registrarse");
       } else {
-        setError("Error al registrar usuario");
+        // error de red
+        setError("No se puede conectar con el servidor");
       }
     } finally {
       setLoading(false);
@@ -58,53 +50,43 @@ export default function Register() {
   return (
     <section className="authPage">
       <div className="authWrap">
-        <div className="authCard card">
-
+        <div className="authCard">
           <div className="authTop">
-            <span className="authIcon">✨</span>
+            <div className="authIcon">✨</div>
             <h1 className="authTitle">Crear cuenta</h1>
             <p className="authSubtitle">
-              Regístrate y empieza a guardar tus cartas favoritas en tu colección.
+              Empieza tu colección
             </p>
           </div>
 
-          <form onSubmit={onSubmit} className="form">
-
+          <form onSubmit={handleSubmit} className="form">
             <div className="formGroup">
-              <label className="label">Email</label>
+              <label>Email</label>
               <input
+                className="authInput"
                 type="email"
-                className="input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="josune@email.com"
                 required
               />
             </div>
 
             <div className="formGroup">
-              <label className="label">Contraseña</label>
+              <label>Contraseña</label>
               <input
+                className="authInput"
                 type="password"
-                className="input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 8 caracteres"
                 required
               />
             </div>
 
-            {/* ❌ ERROR */}
             {error && <p style={{ color: "red" }}>{error}</p>}
 
-            <button
-              type="submit"
-              className="btn btnPrimary authButton"
-              disabled={loading}
-            >
-              {loading ? "Creando cuenta..." : "Crear cuenta"}
+            <button className="authButton" disabled={loading}>
+              {loading ? "Creando..." : "Crear cuenta"}
             </button>
-
           </form>
 
           <p className="authBottomText">
@@ -113,7 +95,6 @@ export default function Register() {
               Inicia sesión
             </Link>
           </p>
-
         </div>
       </div>
     </section>

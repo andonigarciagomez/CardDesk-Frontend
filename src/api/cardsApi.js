@@ -11,7 +11,7 @@ export const getMagicCards = async ({
 } = {}) => {
   const params = {
     page,
-    pageSize: 12,
+    pageSize: 35,
   };
 
   if (search) params.name = search;
@@ -23,15 +23,19 @@ export const getMagicCards = async ({
 
   const cards = response.data.cards || [];
 
-  return cards.map((card) => ({
-    id: card.id,
-    name: card.name,
-    imageUrl: card.imageUrl || "",
-    setName: card.setName || "Magic",
-    rarity: card.rarity || "Unknown",
-    type: card.type || "",
-    types: card.types || [],
-    text: card.text || "",
-    source: "magic",
-  }));
+  // 🔥 FILTRAMOS SOLO LAS QUE TIENEN IMAGEN
+  return cards
+    .filter((card) => card.imageUrl) // 👈 CLAVE
+    .map((card) => ({
+      id: card.id,
+      name: card.name,
+      image: card.imageUrl, // 👈 usa image (no imageUrl)
+      setName: card.setName || "Magic",
+      rarity: card.rarity || "Unknown",
+      type: card.type || "",
+      types: card.types || [],
+      text: card.text || "",
+      source: "magic",
+      raw: card, // 👈 opcional pero recomendable
+    }));
 };

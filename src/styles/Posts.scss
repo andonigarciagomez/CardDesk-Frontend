@@ -1,7 +1,11 @@
 /* 🔥 GRID GENERAL */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  /* 🔥 6 columnas EXACTAS */
+  grid-template-columns: repeat(6, 1fr);
+
+  /* 🔥 4 filas visibles */
+  grid-template-rows: repeat(4, auto);
   gap: 24px;
   padding: 20px;
 }
@@ -20,30 +24,20 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
 
   transition: all 0.3s ease;
+
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+/* 🔥 FIX IMPORTANTE PARA FILTROS */
+.card {
+  overflow: visible !important;
 }
 
 /* 🔥 HOVER PRO */
 .card:hover {
   transform: translateY(-8px) scale(1.03);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-}
-
-/* 🔥 EFECTO BRILLO */
-.card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -120%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    120deg,
-    transparent,
-    rgba(255, 255, 255, 0.25),
-    transparent
-  );
-  transition: 0.6s;
-  z-index: 2;
 }
 
 .card:hover::before {
@@ -99,7 +93,7 @@
   color: white;
 }
 
-/* 🔥 SKELETON LOADING */
+/* 🔥 SKELETON */
 .skeleton-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -122,41 +116,12 @@
   animation: shimmer 1.5s infinite;
 }
 
-/* 🔥 ANIMACIÓN LOADING */
 @keyframes shimmer {
-  0% {
-    background-position: -200%;
-  }
-  100% {
-    background-position: 200%;
-  }
-}
-
-/* 🔥 RESPONSIVE */
-@media (max-width: 1024px) {
-  .card-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .card-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .card-grid {
-    grid-template-columns: repeat(1, 1fr);
-  }
+  0% { background-position: -200%; }
+  100% { background-position: 200%; }
 }
 
 /* 🔥 ANIMACIÓN ENTRADA */
-.card {
-  animation: fadeInUp 0.5s ease forwards;
-  opacity: 0;
-}
-
 @keyframes fadeInUp {
   from {
     transform: translateY(30px);
@@ -168,19 +133,15 @@
   }
 }
 
-/* 🔥 CLICK ANIMACIÓN */
+/* 🔥 CLICK */
 .card:active {
   transform: scale(0.97);
 }
 
-/* 🔥 OVERLAY */
+/* 🔥 MODAL */
 .cardModalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-
+  inset: 0;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
 
@@ -191,7 +152,6 @@
   z-index: 999;
 }
 
-/* 🔥 MODAL */
 .cardModal {
   background: #0f172a;
   border-radius: 20px;
@@ -202,7 +162,6 @@
   overflow: hidden;
 }
 
-/* 🔥 ANIMACIÓN MODAL */
 .animateModal {
   animation: scaleIn 0.3s ease;
 }
@@ -218,40 +177,35 @@
   }
 }
 
-/* 🔥 CONTENIDO */
 .cardModalContent {
   display: flex;
   gap: 20px;
   padding: 20px;
 }
 
-/* 🔥 IMAGEN */
 .cardModalImage img {
   width: 250px;
   border-radius: 12px;
+  transition: transform 0.3s ease;
 }
 
-/* 🔥 INFO */
+.cardModalImage img:hover {
+  transform: scale(1.05);
+}
+
 .cardModalInfo {
   color: white;
   flex: 1;
 }
 
-.cardModalInfo h2 {
-  margin-bottom: 10px;
-}
-
-/* 🔥 META */
 .cardMeta {
   margin-bottom: 10px;
 }
 
-/* 🔥 TEXTO */
 .cardText {
   opacity: 0.8;
 }
 
-/* 🔥 BOTÓN CERRAR */
 .cardModalClose {
   position: absolute;
   top: 10px;
@@ -266,7 +220,7 @@
   cursor: pointer;
 }
 
-/* 🔥 TRANSICIÓN PÁGINA */
+/* 🔥 TRANSICIONES */
 .fadePage {
   animation: fadeInPage 0.4s ease;
 }
@@ -282,26 +236,22 @@
   }
 }
 
-/* 🔥 MODAL GLOW */
-.glowModal {
-  box-shadow:
-    0 0 20px rgba(255, 255, 255, 0.1),
-    0 0 40px rgba(0, 150, 255, 0.2),
-    0 0 80px rgba(0, 150, 255, 0.3);
+.pageTransition {
+  animation: fadeSlide 0.4s ease;
 }
 
-/* 🔥 IMAGEN MODAL */
-.cardModalImage img {
-  width: 250px;
-  border-radius: 12px;
-  transition: transform 0.3s ease;
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.cardModalImage img:hover {
-  transform: scale(1.05);
-}
-
-/* 🌈 HOLOGRÁFICO */
+/* 🌈 HOLO */
 .card.holo::after {
   content: "";
   position: absolute;
@@ -325,22 +275,12 @@
   opacity: 1;
 }
 
-/* 🔁 TRANSICIÓN ENTRE PÁGINAS */
-.pageTransition {
-  animation: fadeSlide 0.4s ease;
-}
+/* 🎨 COLECCIONES */
+.card.magic { border: 2px solid #facc15; }
+.card.pokemon { border: 2px solid #3b82f6; }
+.card.yugioh { border: 2px solid #a855f7; }
 
-@keyframes fadeSlide {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* 🌙 DARK */
 body.dark {
   background: #020617;
   color: white;
@@ -359,35 +299,25 @@ body.dark .favorite-btn {
   color: black;
 }
 
-/* 🎨 MAGIC */
-.card.magic {
-  border: 2px solid #facc15;
-}
-
-/* 🎨 POKEMON */
-.card.pokemon {
-  border: 2px solid #3b82f6;
-}
-
-/* 🎨 YUGIOH */
-.card.yugioh {
-  border: 2px solid #a855f7;
-}
-
+/* 🔥 TABS FIX DEFINITIVO */
 .tabs {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap; /* 👈 CLAVE */
+  gap: 12px;
   margin-bottom: 20px;
+  align-items: center;
 }
 
 .tab {
   padding: 10px 16px;
-  border: none;
   border-radius: 12px;
-  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
   background: #1e293b;
   color: white;
+  cursor: pointer;
   transition: 0.2s;
+
+  white-space: nowrap; /* 👈 evita rotura */
 }
 
 .tab:hover {
@@ -398,91 +328,13 @@ body.dark .favorite-btn {
   background: #3b82f6;
 }
 
-.authContainer {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+/* 📱 RESPONSIVE EXTRA */
+@media (max-width: 600px) {
+  .tabs {
+    overflow-x: auto;
+  }
 
-.authCard {
-  width: 100%;
-  max-width: 420px;
-  padding: 30px;
-
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* TITULO */
-.authTitle {
-  text-align: center;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-/* TEXTO */
-.authSubtitle {
-  text-align: center;
-  opacity: 0.7;
-}
-
-/* INPUTS */
-.authInput {
-  width: 100%;
-  padding: 12px 14px;
-
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.1);
-
-  background: #0f172a;
-  color: white;
-
-  outline: none;
-}
-
-.authInput:focus {
-  border: 1px solid #3b82f6;
-}
-
-/* BOTÓN */
-.authButton {
-  width: 100%;
-  padding: 12px;
-
-  border-radius: 10px;
-  border: none;
-
-  background: #3b82f6;
-  color: white;
-
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.authButton:hover {
-  transform: translateY(-2px);
-  background: #2563eb;
-}
-
-/* ICONO */
-.authIcon {
-  width: 60px;
-  height: 60px;
-  margin: 0 auto;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 16px;
-  background: linear-gradient(135deg, #6366f1, #ec4899);
-  font-size: 24px;
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
 }

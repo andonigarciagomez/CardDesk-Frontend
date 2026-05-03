@@ -1,22 +1,18 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo.png";
-import { useNavigate } from "react-router-dom";
-
-const navigate = useNavigate();
 
 export default function Navbar() {
   const { token, user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const getNavClass = ({ isActive }) =>
     isActive ? "navLink navLinkActive" : "navLink";
 
   const handleLogout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-
-  navigate("/login");
-};
+    logout(); // 🔥 IMPORTANTE
+    navigate("/login");
+  };
 
   return (
     <header className="header">
@@ -43,7 +39,7 @@ export default function Navbar() {
                 Perfil
               </NavLink>
 
-              <button onClick={logout} className="btn btnDanger">
+              <button onClick={handleLogout} className="btn btnDanger">
                 Salir
               </button>
 

@@ -1,45 +1,76 @@
-.heroBanner{
-  position: relative;
-  overflow: hidden;
-  border-radius: 24px;
-  margin-bottom: 28px;
-  min-height: 320px;
-}
-
-.heroBanner__image{
-  width: 100%;
-  height: 100%;
-  min-height: 320px;
-  object-fit: cover;
-  display: block;
-}
-
-.heroBanner__overlay{
-  position: absolute;
-  inset: 0;
+.homePage {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 28px;
+  gap: 20px;
+}
+
+/* 🔥 HERO */
+.heroBanner {
+  position: relative;
+  width: 100%;
+
+  min-height: 280px; /* 🔥 en vez de height fijo */
+  height: auto;
+
+  border-radius: 20px;
+  overflow: hidden;
+
+  margin-bottom: 24px;
+}
+
+.heroBanner__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heroBanner__overlay {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  padding: 30px;
+
   background: linear-gradient(
-    180deg,
-    rgba(0,0,0,0.08) 0%,
-    rgba(0,0,0,0.28) 45%,
-    rgba(0,0,0,0.72) 100%
+    to right,
+    rgba(0,0,0,0.7),
+    transparent
   );
 }
 
-.heroBanner__title{
-  margin: 0 0 10px;
-  font-size: clamp(28px, 4vw, 46px);
-  font-weight: 800;
-  color: #fff;
+/* 🔥 RESULTADOS */
+.homeResults {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.heroBanner__text{
-  margin: 0;
-  max-width: 700px;
-  font-size: 15px;
-  line-height: 1.5;
-  color: rgba(255,255,255,0.9);
+/* 🔥 PAGINACIÓN */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.paginationPage {
+  font-weight: bold;
+}
+
+/* 🔥 IMPORTANTE FIX */
+.card {
+  overflow: visible !important;
+}
+
+.cardBody {
+  padding: 24px;
+}
+
+.cardBody {
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box; /* 🔥 clave */
 }

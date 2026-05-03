@@ -3,31 +3,37 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem("token") || "");
-  const [user, setUser] = useState(() => {
-    const raw = localStorage.getItem("user");
-    return raw ? JSON.parse(raw) : null;
-  });
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // simulamos "carga inicial"
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
+    }
+
     setLoading(false);
   }, []);
 
-  const login = (fakeUser) => {
-    const fakeToken = "demo-token";
-    setToken(fakeToken);
-    setUser(fakeUser);
-    localStorage.setItem("token", fakeToken);
-    localStorage.setItem("user", JSON.stringify(fakeUser));
+  const login = (data) => {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    // 🔥 FORZAMOS SINCRONÍA (clave)
+    setToken(data.token);
+    setUser(data.user);
   };
 
   const logout = () => {
-    setToken("");
-    setUser(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
+    setToken(null);
+    setUser(null);
   };
 
   const value = useMemo(
@@ -38,8 +44,4 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth debe usarse dentro de <AuthProvider>");
-  return ctx;
-}
+export const useAuth = () => useContext(AuthContext);
